@@ -1,0 +1,42 @@
+version: 2
+
+sources:
+  - name: olist_bronze
+    description: "Raw Olist e-commerce data loaded by Auto Loader (Day 1). All columns are strings."
+    database: workspace
+    schema: olist_bronze
+    config:
+      loaded_at_field: _ingested_at
+      freshness:
+        warn_after: {count: 24, period: hour}
+    tables:
+      - name: orders
+        description: "One row per order, with status and lifecycle timestamps."
+        columns:
+          - name: order_id
+            data_tests: [unique, not_null]
+      - name: customers
+        description: "One row per customer_id (per order). customer_unique_id identifies the real person."
+        columns:
+          - name: customer_id
+            data_tests: [unique, not_null]
+      - name: order_items
+        description: "One row per item in an order (order_id + order_item_id)."
+      - name: order_payments
+        description: "One row per payment on an order; an order can be split across several payments."
+      - name: order_reviews
+        description: "Customer reviews. review_id is NOT unique in the raw data."
+      - name: products
+        description: "Product catalogue, Portuguese category names."
+        columns:
+          - name: product_id
+            data_tests: [unique, not_null]
+      - name: sellers
+        description: "One row per seller."
+        columns:
+          - name: seller_id
+            data_tests: [unique, not_null]
+      - name: geolocation
+        description: "Zip prefix to lat/lng and city. Many rows per zip prefix."
+      - name: product_category_name_translation
+        description: "Portuguese → English category names."
