@@ -41,21 +41,61 @@ models:
 
   - name: fct_orders
     description: "One row per order: amounts, payment split, delivery timing, review score."
+    config:
+      contract:
+        enforced: true
     columns:
       - name: order_id
+        data_type: string
+        constraints:
+          - type: not_null
         data_tests: [unique, not_null]
       - name: customer_unique_id
+        data_type: string
         data_tests:
           - relationships:
               arguments:
                 to: ref('dim_customers')
                 field: customer_unique_id
+      - name: order_status
+        data_type: string
+      - name: purchased_at
+        data_type: timestamp
       - name: purchase_date
+        data_type: date
         data_tests:
           - relationships:
               arguments:
                 to: ref('dim_date')
                 field: date_day
+      - name: delivered_at
+        data_type: timestamp
+      - name: estimated_delivery_at
+        data_type: timestamp
+      - name: item_count
+        data_type: bigint
+      - name: items_value
+        data_type: decimal(20,2)
+      - name: freight_value
+        data_type: decimal(20,2)
+      - name: total_paid
+        data_type: decimal(20,2)
+      - name: credit_card_amount
+        data_type: decimal(22,2)
+      - name: boleto_amount
+        data_type: decimal(22,2)
+      - name: voucher_amount
+        data_type: decimal(22,2)
+      - name: debit_card_amount
+        data_type: decimal(22,2)
+      - name: avg_review_score
+        data_type: double
+      - name: delivery_days
+        data_type: int
+      - name: delivery_delay_days
+        data_type: int
+      - name: is_late
+        data_type: boolean
 
   - name: fct_order_items
     description: "One row per item sold: price, freight, product, seller."

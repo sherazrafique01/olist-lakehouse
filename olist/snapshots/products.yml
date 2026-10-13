@@ -1,0 +1,8 @@
+snapshots:
+  - name: snap_products
+    relation: ref('stg_olist__products')
+    config:
+      schema: olist_snapshots
+      unique_key: product_id
+      strategy: check
+      check_cols: ['product_category_name', 'product_weight_g']

@@ -1,0 +1,24 @@
+unit_tests:
+  - name: fct_orders_is_late_rule
+    description: "Late = delivered after the estimate; on time = before; not delivered = null."
+    model: fct_orders
+    given:
+      - input: ref('stg_olist__orders')
+        rows:
+          - {order_id: o_late,   customer_id: c1, order_status: delivered, purchased_at: '2018-01-01 10:00:00', delivered_at: '2018-01-10 10:00:00', estimated_delivery_at: '2018-01-08 00:00:00'}
+          - {order_id: o_ontime, customer_id: c1, order_status: delivered, purchased_at: '2018-01-01 10:00:00', delivered_at: '2018-01-05 10:00:00', estimated_delivery_at: '2018-01-08 00:00:00'}
+          - {order_id: o_open,   customer_id: c1, order_status: shipped,   purchased_at: '2018-01-01 10:00:00', delivered_at: null,                  estimated_delivery_at: '2018-01-08 00:00:00'}
+      - input: ref('stg_olist__customers')
+        rows:
+          - {customer_id: c1, customer_unique_id: p1}
+      - input: ref('stg_olist__order_items')
+        rows: []
+      - input: ref('int_order_payments_pivoted')
+        rows: []
+      - input: ref('int_order_reviews_per_order')
+        rows: []
+    expect:
+      rows:
+        - {order_id: o_late,   is_late: true,  delivery_delay_days: 2}
+        - {order_id: o_ontime, is_late: false, delivery_delay_days: -3}
+        - {order_id: o_open,   is_late: null,  delivery_delay_days: null}

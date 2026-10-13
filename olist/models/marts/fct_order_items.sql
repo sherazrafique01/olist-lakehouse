@@ -1,5 +1,16 @@
+{{ config(
+    materialized='incremental',
+    incremental_strategy='merge',
+    unique_key='order_item_sk',
+    on_schema_change='append_new_columns',
+    liquid_clustered_by=['purchase_date']
+) }}
+
 with items as (
     select * from {{ ref('stg_olist__order_items') }}
+    {% if is_incremental() %}
+    where _ingested_at > (select max(_ingested_at) - interval 3 days from {{ this }})
+    {% endif %}
 ),
 orders as (
     select order_id, customer_id, order_status, purchased_at from {{ ref('stg_olist__orders') }}
@@ -19,7 +30,8 @@ select
     cast(o.purchased_at as date)   as purchase_date,
     i.price,
     i.freight_value,
-    i.price + i.freight_value      as item_total
+    i.price + i.freight_value      as item_total,
+    i._ingested_at
 from items i
 join orders o     on i.order_id = o.order_id
 join customers c  on o.customer_id = c.customer_id
