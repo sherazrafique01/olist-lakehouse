@@ -1,0 +1,93 @@
+version: 2
+
+models:
+  - name: stg_olist__orders
+    description: "Cleaned orders: typed timestamps, lower-case status, one row per order."
+    columns:
+      - name: order_id
+        data_tests: [unique, not_null]
+      - name: customer_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_olist__customers')
+                field: customer_id
+      - name: order_status
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['delivered','shipped','canceled','unavailable','invoiced','processing','created','approved']
+
+  - name: stg_olist__customers
+    description: "One row per customer_id. customer_unique_id = the real person."
+    columns:
+      - name: customer_id
+        data_tests: [unique, not_null]
+      - name: customer_unique_id
+        data_tests: [not_null]
+
+  - name: stg_olist__order_items
+    description: "One row per item in an order. Key = order_id + order_item_id."
+    columns:
+      - name: order_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_olist__orders')
+                field: order_id
+      - name: product_id
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('stg_olist__products')
+                field: product_id
+      - name: seller_id
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('stg_olist__sellers')
+                field: seller_id
+
+  - name: stg_olist__order_payments
+    description: "One row per payment. Key = order_id + payment_sequential."
+    columns:
+      - name: order_id
+        data_tests: [not_null]
+      - name: payment_type
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['credit_card','boleto','voucher','debit_card','not_defined']
+
+  - name: stg_olist__order_reviews
+    description: "Customer reviews. Key = review_id + order_id."
+    columns:
+      - name: review_score
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [1, 2, 3, 4, 5]
+                quote: false
+
+  - name: stg_olist__products
+    description: "Product catalogue with typed dimensions; source typos fixed."
+    columns:
+      - name: product_id
+        data_tests: [unique, not_null]
+
+  - name: stg_olist__sellers
+    description: "One row per seller."
+    columns:
+      - name: seller_id
+        data_tests: [unique, not_null]
+
+  - name: stg_olist__geolocation
+    description: "Zip prefix points; many rows per prefix by design."
+
+  - name: stg_olist__category_translation
+    description: "Portuguese to English product category names."
+    columns:
+      - name: product_category_name
+        data_tests: [unique, not_null]

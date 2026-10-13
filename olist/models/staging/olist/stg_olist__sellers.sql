@@ -1,0 +1,11 @@
+with src as (
+    select * from {{ source('olist_bronze', 'sellers') }}
+)
+select
+    seller_id,
+    seller_zip_code_prefix                      as zip_code_prefix,
+    lower(trim(seller_city))                    as city,
+    upper(trim(seller_state))                   as state,
+    _ingested_at
+from src
+qualify row_number() over (partition by seller_id order by _ingested_at desc) = 1
