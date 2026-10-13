@@ -1,0 +1,81 @@
+version: 2
+
+models:
+  - name: dim_customers
+    description: "One row per real customer (customer_unique_id), with latest location and order count."
+    columns:
+      - name: customer_unique_id
+        data_tests: [unique, not_null]
+      - name: zip_code_prefix
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_geography')
+                field: zip_code_prefix
+              config:
+                severity: warn
+
+  - name: dim_products
+    description: "One row per product, with English category name."
+    columns:
+      - name: product_id
+        data_tests: [unique, not_null]
+
+  - name: dim_sellers
+    description: "One row per seller."
+    columns:
+      - name: seller_id
+        data_tests: [unique, not_null]
+
+  - name: dim_geography
+    description: "One row per zip prefix: average lat/lng, city, state."
+    columns:
+      - name: zip_code_prefix
+        data_tests: [unique, not_null]
+
+  - name: dim_date
+    description: "One row per calendar day, 2016-01-01 to 2018-12-31."
+    columns:
+      - name: date_day
+        data_tests: [unique, not_null]
+
+  - name: fct_orders
+    description: "One row per order: amounts, payment split, delivery timing, review score."
+    columns:
+      - name: order_id
+        data_tests: [unique, not_null]
+      - name: customer_unique_id
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_customers')
+                field: customer_unique_id
+      - name: purchase_date
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_day
+
+  - name: fct_order_items
+    description: "One row per item sold: price, freight, product, seller."
+    columns:
+      - name: order_item_sk
+        data_tests: [unique, not_null]
+      - name: product_id
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_products')
+                field: product_id
+      - name: seller_id
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_sellers')
+                field: seller_id
+      - name: price
+        data_tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
