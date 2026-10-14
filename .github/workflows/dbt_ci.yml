@@ -1,0 +1,35 @@
+name: dbt CI
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  dbt-build:
+    runs-on: ubuntu-latest
+    env:
+      DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+      DATABRICKS_HTTP_PATH: ${{ secrets.DATABRICKS_HTTP_PATH }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+      CI_SCHEMA: ci_pr_${{ github.event.number }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync
+      - name: Check HTTP path shape (temporary)
+        run: |
+          echo "length: ${#DATABRICKS_HTTP_PATH}"
+          echo "starts with: ${DATABRICKS_HTTP_PATH:0:19}"
+          echo "has whitespace: $([[ "$DATABRICKS_HTTP_PATH" =~ [[:space:]] ]] && echo yes || echo no)"
+      - name: dbt build
+        working-directory: olist
+        run: |
+          uv run dbt deps
+          uv run dbt build --target ci --profiles-dir ./ci
+
+
+
+
+
+
+          
