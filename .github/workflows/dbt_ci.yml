@@ -16,20 +16,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
       - run: uv sync
-      - name: Check HTTP path shape (temporary)
-        run: |
-          echo "length: ${#DATABRICKS_HTTP_PATH}"
-          echo "starts with: ${DATABRICKS_HTTP_PATH:0:19}"
-          echo "has whitespace: $([[ "$DATABRICKS_HTTP_PATH" =~ [[:space:]] ]] && echo yes || echo no)"
       - name: dbt build
         working-directory: olist
         run: |
           uv run dbt deps
           uv run dbt build --target ci --profiles-dir ./ci
-
-
-
-
-
-
-          
